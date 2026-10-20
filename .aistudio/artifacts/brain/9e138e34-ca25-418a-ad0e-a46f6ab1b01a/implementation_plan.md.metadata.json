@@ -1,0 +1,6 @@
+{
+  "summary": "Architectural blueprint and implementation plan for Travel Inquiry Dispatcher, featuring separated frontend/backend folders, Express REST API, persistent document storage, single-owner JWT auth, atomic Khatabook ledger, and Resend email dispatcher with test previews.",
+  "updatedAt": "2026-10-20T04:20:49.769103221Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

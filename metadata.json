@@ -1,0 +1,8 @@
+{
+  "name": "Travel Inquiry Dispatcher",
+  "description": "Private operations hub for travel inquiry logging, one-click agent dispatching without client contact leakage, and Khatabook ledger tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

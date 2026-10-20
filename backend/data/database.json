@@ -1,0 +1,64 @@
+{
+  "users": [
+    {
+      "id": "usr_owner_1792471893004",
+      "email": "owner@traveldispatcher.local",
+      "passwordHash": "$2b$10$tEImPpclzgl9KNrUVnkd5eEFMxLl0rREkiRUxEhIbazqChrYkqGPO",
+      "createdAt": "2026-10-20T04:51:33.004Z"
+    }
+  ],
+  "agents": [
+    {
+      "id": "agent_dev_01",
+      "name": "Dev",
+      "phone": "+91 99989 30532",
+      "email": "mistryjay1804p@gmail.com",
+      "active": true,
+      "createdAt": "2026-10-20T05:00:00.000Z",
+      "updatedAt": "2026-10-20T05:00:00.000Z"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "inq_1001_kashmir",
+      "inquiryNumber": 1001,
+      "type": "ticket",
+      "tripType": "single",
+      "clientName": "Pravinbhai",
+      "clientPhone": "+919998930532",
+      "destination": "Kashmir",
+      "pickup": "Surat",
+      "drop": "Hotel",
+      "dateMode": "fixed",
+      "startDate": "2026-11-20",
+      "endDate": "2026-11-30",
+      "adults": 2,
+      "children": 0,
+      "travelClass": "Economy",
+      "airlinePref": "Any / Best Fare",
+      "notes": "",
+      "status": "confirmed",
+      "stops": [],
+      "dispatches": [
+        {
+          "id": "disp_dev_01",
+          "agentId": "agent_dev_01",
+          "agentName": "Dev",
+          "agentEmail": "mistryjay1804p@gmail.com",
+          "status": "sent",
+          "sentAt": "2026-10-20T05:10:00.000Z",
+          "subject": "New Ticket (One-Way) Inquiry #1001 - Kashmir",
+          "previewHtml": ""
+        }
+      ],
+      "createdAt": "2026-10-20T05:00:00.000Z",
+      "updatedAt": "2026-10-20T05:10:00.000Z"
+    }
+  ],
+  "ledger": [],
+  "nextInquiryNumber": 1002,
+  "config": {
+    "resendApiKey": "",
+    "resendFromEmail": "onboarding@resend.dev"
+  }
+}
