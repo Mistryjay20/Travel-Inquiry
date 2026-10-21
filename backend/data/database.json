@@ -12,7 +12,7 @@
       "id": "agent_dev_01",
       "name": "Dev",
       "phone": "+91 99989 30532",
-      "email": "mistryjay1804p@gmail.com",
+      "email": "jaymistry1804@gmail.com",
       "active": true,
       "createdAt": "2026-10-20T05:00:00.000Z",
       "updatedAt": "2026-10-20T05:00:00.000Z"
@@ -44,7 +44,7 @@
           "id": "disp_dev_01",
           "agentId": "agent_dev_01",
           "agentName": "Dev",
-          "agentEmail": "mistryjay1804p@gmail.com",
+          "agentEmail": "jaymistry1804@gmail.com",
           "status": "sent",
           "sentAt": "2026-10-20T05:10:00.000Z",
           "subject": "New Ticket (One-Way) Inquiry #1001 - Kashmir",

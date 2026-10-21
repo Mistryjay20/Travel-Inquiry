@@ -241,14 +241,18 @@ export async function dispatchToAgent(
     });
 
     if (error) {
-      console.error(`[Resend Error] Agent: ${agent.email}, Error:`, error);
+      let friendlyError = error.message || 'Resend API returned an error';
+      if (friendlyError.includes('You can only send testing emails to your own email address')) {
+        friendlyError = `Resend Test Mode Restriction: In sandbox mode, emails can only be sent to your registered Resend account (${friendlyError.match(/\(([^)]+)\)/)?.[1] || 'jaymistry1804@gmail.com'}). To send to any agent, verify a domain in Resend.`;
+      }
+      console.warn(`[Resend Error Handled] Agent: ${agent.email}, Reason: ${friendlyError}`);
       return {
         id: dispatchId,
         agentId: agent.id,
         agentName: agent.name,
         agentEmail: agent.email,
         status: 'failed',
-        errorText: error.message || 'Resend API returned an error',
+        errorText: friendlyError,
         sentAt: now,
         subject,
         previewHtml: html,

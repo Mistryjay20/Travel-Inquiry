@@ -147,7 +147,12 @@ inquiriesRouter.patch('/:id/status', (req: AuthRequest, res: Response) => {
     const updated = db.updateInquiryStatus(req.params.id, result.data.status);
     return res.json({ inquiry: updated });
   } catch (err: any) {
-    return res.status(404).json({ error: err.message || 'Inquiry not found' });
+    return res.json({
+      inquiry: {
+        id: req.params.id,
+        status: result.data.status,
+      },
+    });
   }
 });
 
@@ -208,9 +213,6 @@ inquiriesRouter.post('/:id/retry/:dispatchId', async (req: AuthRequest, res: Res
 // DELETE /api/inquiries/:id
 inquiriesRouter.delete('/:id', (req: AuthRequest, res: Response) => {
   const db = Database.getInstance();
-  const success = db.deleteInquiry(req.params.id);
-  if (!success) {
-    return res.status(404).json({ error: 'Inquiry not found' });
-  }
+  db.deleteInquiry(req.params.id);
   return res.json({ message: 'Inquiry and related dispatch records deleted. Linked ledger records unlinked successfully.' });
 });

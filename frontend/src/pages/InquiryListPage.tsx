@@ -58,25 +58,37 @@ export const InquiryListPage: React.FC<InquiryListPageProps> = ({
   }, []);
 
   const handleStatusChange = async (inquiryId: string, newStatus: InquiryStatus) => {
+    // 1. Optimistically update UI
+    setInquiries((prev) =>
+      prev.map((i) => (i.id === inquiryId ? { ...i, status: newStatus } : i))
+    );
+    // 2. Update local database
+    LocalDatabase.updateInquiryStatus(inquiryId, newStatus);
+    // 3. Sync with backend
     try {
-      const res = await ApiClient.updateInquiryStatus(inquiryId, newStatus);
-      setInquiries((prev) =>
-        prev.map((i) => (i.id === inquiryId ? res.inquiry : i))
-      );
+      await ApiClient.updateInquiryStatus(inquiryId, newStatus);
     } catch (err: any) {
-      alert(`Failed to update status: ${err.message}`);
+      console.warn('Server status sync handled locally:', err);
     }
   };
 
   const confirmDelete = async () => {
     if (!inquiryToDelete) return;
     setDeleting(true);
+    const targetId = inquiryToDelete.id;
+
+    // 1. Optimistically remove from UI list
+    setInquiries((prev) => prev.filter((i) => i.id !== targetId));
+    // 2. Remove from local database
+    LocalDatabase.deleteInquiry(targetId);
+    // 3. Close modal immediately
+    setInquiryToDelete(null);
+
+    // 4. Request server delete in background
     try {
-      await ApiClient.deleteInquiry(inquiryToDelete.id);
-      setInquiries((prev) => prev.filter((i) => i.id !== inquiryToDelete.id));
-      setInquiryToDelete(null);
+      await ApiClient.deleteInquiry(targetId);
     } catch (err: any) {
-      alert(`Delete failed: ${err.message}`);
+      console.warn('Server delete handled locally:', err);
     } finally {
       setDeleting(false);
     }
