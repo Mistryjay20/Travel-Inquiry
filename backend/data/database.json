@@ -55,7 +55,28 @@
       "updatedAt": "2026-10-20T05:10:00.000Z"
     }
   ],
-  "ledger": [],
+  "ledger": [
+    {
+      "id": "ledg_1792560135127_erv3",
+      "clientName": "Pravinbhai",
+      "amountReceived": 850000,
+      "date": "2026-10-21",
+      "note": "Full package advance",
+      "inquiryId": null,
+      "disbursements": [
+        {
+          "id": "disb_1792560135141_cu4f",
+          "agentName": "Dev",
+          "amount": 200000,
+          "date": "2026-10-21",
+          "note": "Hotel and cab booking",
+          "createdAt": "2026-10-21T05:22:15.140Z"
+        }
+      ],
+      "createdAt": "2026-10-21T05:22:15.127Z",
+      "updatedAt": "2026-10-21T05:22:15.140Z"
+    }
+  ],
   "nextInquiryNumber": 1002,
   "config": {
     "resendApiKey": "",

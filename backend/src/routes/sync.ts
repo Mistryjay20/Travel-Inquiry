@@ -10,33 +10,36 @@ syncRouter.use(requireAuth);
 syncRouter.post('/', (req: AuthRequest, res: Response) => {
   const { inquiries, agents, ledger } = req.body;
   const db = Database.getInstance();
+  (db as any).data = (db as any).readFromDisk();
 
   if (Array.isArray(inquiries) && inquiries.length > 0) {
-    const existing = db.getInquiries();
-    const existingIds = new Set(existing.map((i) => i.id));
     for (const inq of inquiries) {
-      if (!existingIds.has(inq.id)) {
-        // Save into server DB
+      const idx = (db as any).data.inquiries.findIndex((i: any) => i.id === inq.id);
+      if (idx >= 0) {
+        (db as any).data.inquiries[idx] = inq;
+      } else {
         (db as any).data.inquiries.push(inq);
       }
     }
   }
 
   if (Array.isArray(agents) && agents.length > 0) {
-    const existing = db.getAgents();
-    const existingIds = new Set(existing.map((a) => a.id));
     for (const ag of agents) {
-      if (!existingIds.has(ag.id)) {
+      const idx = (db as any).data.agents.findIndex((a: any) => a.id === ag.id);
+      if (idx >= 0) {
+        (db as any).data.agents[idx] = ag;
+      } else {
         (db as any).data.agents.push(ag);
       }
     }
   }
 
   if (Array.isArray(ledger) && ledger.length > 0) {
-    const existing = db.getLedgerRecords();
-    const existingIds = new Set(existing.map((l) => l.id));
     for (const rec of ledger) {
-      if (!existingIds.has(rec.id)) {
+      const idx = (db as any).data.ledger.findIndex((l: any) => l.id === rec.id);
+      if (idx >= 0) {
+        (db as any).data.ledger[idx] = rec;
+      } else {
         (db as any).data.ledger.push(rec);
       }
     }

@@ -223,12 +223,31 @@ export class ApiClient {
     recordId: string,
     disbursement: { agentName: string; agentId?: string; amount: number; date?: string; note?: string }
   ): Promise<{ record: LedgerRecord }> {
-    const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends`, {
-      method: 'POST',
-      body: JSON.stringify(disbursement),
-    });
-    LocalDatabase.saveLedgerRecord(res.record);
-    return res;
+    const localRecord = LocalDatabase.addDisbursement(recordId, disbursement);
+    try {
+      const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends`, {
+        method: 'POST',
+        body: JSON.stringify(disbursement),
+      });
+      LocalDatabase.saveLedgerRecord(res.record);
+      return res;
+    } catch (err: any) {
+      if (err.message && err.message.includes('Ledger record not found')) {
+        await ApiClient.syncAllLocalDataToServer();
+        try {
+          const retryRes = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends`, {
+            method: 'POST',
+            body: JSON.stringify(disbursement),
+          });
+          LocalDatabase.saveLedgerRecord(retryRes.record);
+          return retryRes;
+        } catch {
+          if (localRecord) return { record: localRecord };
+        }
+      }
+      if (localRecord) return { record: localRecord };
+      throw err;
+    }
   }
 
   public static async updateDisbursement(
@@ -236,20 +255,32 @@ export class ApiClient {
     disbursementId: string,
     updates: { agentName?: string; agentId?: string; amount?: number; date?: string; note?: string }
   ): Promise<{ record: LedgerRecord }> {
-    const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends/${disbursementId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-    LocalDatabase.saveLedgerRecord(res.record);
-    return res;
+    const localRecord = LocalDatabase.updateDisbursement(recordId, disbursementId, updates);
+    try {
+      const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends/${disbursementId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+      LocalDatabase.saveLedgerRecord(res.record);
+      return res;
+    } catch (err: any) {
+      if (localRecord) return { record: localRecord };
+      throw err;
+    }
   }
 
   public static async removeDisbursement(recordId: string, disbursementId: string): Promise<{ record: LedgerRecord }> {
-    const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends/${disbursementId}`, {
-      method: 'DELETE',
-    });
-    LocalDatabase.saveLedgerRecord(res.record);
-    return res;
+    const localRecord = LocalDatabase.removeDisbursement(recordId, disbursementId);
+    try {
+      const res = await ApiClient.request<{ record: LedgerRecord }>(`/api/ledger/${recordId}/sends/${disbursementId}`, {
+        method: 'DELETE',
+      });
+      LocalDatabase.saveLedgerRecord(res.record);
+      return res;
+    } catch (err: any) {
+      if (localRecord) return { record: localRecord };
+      throw err;
+    }
   }
 
   // --- Config ---

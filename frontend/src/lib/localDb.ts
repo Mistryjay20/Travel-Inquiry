@@ -165,6 +165,84 @@ export class LocalDatabase {
     return store.ledger.length !== initialLen;
   }
 
+  public static addDisbursement(
+    recordId: string,
+    disb: { agentName: string; agentId?: string; amount: number; date?: string; note?: string }
+  ): LedgerRecord | null {
+    const store = LocalDatabase.getStore();
+    const record = store.ledger.find((r) => r.id === recordId);
+    if (!record) return null;
+
+    if (!record.disbursements) record.disbursements = [];
+    const currentSent = record.disbursements.reduce((sum, d) => sum + d.amount, 0);
+    if (currentSent + disb.amount > record.amountReceived) {
+      throw new Error(
+        `Over-send rejected: Available balance is Rs. ${record.amountReceived - currentSent}, but tried to disburse Rs. ${disb.amount}.`
+      );
+    }
+
+    const now = new Date().toISOString();
+    const newDisbursement = {
+      id: 'disb_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      agentName: disb.agentName.trim(),
+      agentId: disb.agentId,
+      amount: disb.amount,
+      date: disb.date || now.split('T')[0],
+      note: disb.note?.trim() || '',
+      createdAt: now,
+    };
+
+    record.disbursements.push(newDisbursement);
+    record.updatedAt = now;
+    LocalDatabase.saveStore(store);
+    return record;
+  }
+
+  public static updateDisbursement(
+    recordId: string,
+    disbursementId: string,
+    updates: { agentName?: string; agentId?: string; amount?: number; date?: string; note?: string }
+  ): LedgerRecord | null {
+    const store = LocalDatabase.getStore();
+    const record = store.ledger.find((r) => r.id === recordId);
+    if (!record || !record.disbursements) return null;
+
+    const disb = record.disbursements.find((d) => d.id === disbursementId);
+    if (!disb) return null;
+
+    if (updates.amount !== undefined) {
+      const otherSent = record.disbursements
+        .filter((d) => d.id !== disbursementId)
+        .reduce((sum, d) => sum + d.amount, 0);
+      if (otherSent + updates.amount > record.amountReceived) {
+        throw new Error(
+          `Over-send rejected: Maximum allowable amount is Rs. ${record.amountReceived - otherSent}.`
+        );
+      }
+      disb.amount = updates.amount;
+    }
+
+    if (updates.agentName !== undefined) disb.agentName = updates.agentName.trim();
+    if (updates.agentId !== undefined) disb.agentId = updates.agentId;
+    if (updates.date !== undefined) disb.date = updates.date;
+    if (updates.note !== undefined) disb.note = updates.note.trim();
+
+    record.updatedAt = new Date().toISOString();
+    LocalDatabase.saveStore(store);
+    return record;
+  }
+
+  public static removeDisbursement(recordId: string, disbursementId: string): LedgerRecord | null {
+    const store = LocalDatabase.getStore();
+    const record = store.ledger.find((r) => r.id === recordId);
+    if (!record || !record.disbursements) return null;
+
+    record.disbursements = record.disbursements.filter((d) => d.id !== disbursementId);
+    record.updatedAt = new Date().toISOString();
+    LocalDatabase.saveStore(store);
+    return record;
+  }
+
   public static mergeServerData(server: { agents?: Agent[]; inquiries?: Inquiry[]; ledger?: LedgerRecord[] }) {
     const store = LocalDatabase.getStore();
 

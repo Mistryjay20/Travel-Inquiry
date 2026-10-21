@@ -262,6 +262,7 @@ export class Database {
     if (data.amountReceived <= 0) {
       throw new Error('Amount received must be greater than zero');
     }
+    this.data = this.readFromDisk();
     const now = new Date().toISOString();
     const newRecord: LedgerRecord = {
       id: 'ledg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -283,6 +284,7 @@ export class Database {
     id: string,
     updates: { clientName?: string; amountReceived?: number; date?: string; note?: string; inquiryId?: string | null }
   ): LedgerRecord {
+    this.data = this.readFromDisk();
     const record = this.data.ledger.find((r) => r.id === id);
     if (!record) {
       throw new Error('Ledger record not found');
@@ -310,8 +312,9 @@ export class Database {
   }
 
   public deleteLedgerRecord(id: string): boolean {
+    this.data = this.readFromDisk();
     const idx = this.data.ledger.findIndex((r) => r.id === id);
-    if (idx === -1) return false;
+    if (idx === -1) return true; // Idempotent
     this.data.ledger.splice(idx, 1);
     this.persist();
     return true;
@@ -322,6 +325,7 @@ export class Database {
     recordId: string,
     disbursement: { agentName: string; agentId?: string; amount: number; date?: string; note?: string }
   ): LedgerRecord {
+    this.data = this.readFromDisk();
     const record = this.data.ledger.find((r) => r.id === recordId);
     if (!record) {
       throw new Error('Ledger record not found');
@@ -363,6 +367,7 @@ export class Database {
     disbursementId: string,
     updates: { agentName?: string; agentId?: string; amount?: number; date?: string; note?: string }
   ): LedgerRecord {
+    this.data = this.readFromDisk();
     const record = this.data.ledger.find((r) => r.id === recordId);
     if (!record) {
       throw new Error('Ledger record not found');
@@ -401,6 +406,7 @@ export class Database {
   }
 
   public removeDisbursement(recordId: string, disbursementId: string): LedgerRecord {
+    this.data = this.readFromDisk();
     const record = this.data.ledger.find((r) => r.id === recordId);
     if (!record) {
       throw new Error('Ledger record not found');
