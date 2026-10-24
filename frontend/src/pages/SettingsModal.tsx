@@ -12,6 +12,7 @@ import {
   Download,
   Upload,
   RefreshCw,
+  Smartphone,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -163,6 +164,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="hidden"
               />
             </label>
+          </div>
+        </div>
+
+        {/* Mobile PWA & App Shortcut */}
+        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <div className="flex items-center gap-2">
+            <Smartphone className="w-4 h-4 text-slate-700" />
+            <span className="text-xs font-semibold text-slate-900">Mobile App Installation</span>
+          </div>
+          <p className="text-[11px] text-slate-600 leading-relaxed">
+            This app is optimized for mobile phones as a standalone app with offline persistence.
+          </p>
+          <div className="text-[11px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+            <div>• <strong>Android Chrome:</strong> Tap menu (<span className="font-mono">⋮</span>) &rarr; <em>Add to Home screen</em> or <em>Install app</em>.</div>
+            <div>• <strong>iPhone / Safari:</strong> Tap Share button (<span className="text-slate-800">⎋/↑</span>) &rarr; <em>Add to Home Screen</em>.</div>
           </div>
         </div>
 

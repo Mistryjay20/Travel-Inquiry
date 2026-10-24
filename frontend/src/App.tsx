@@ -10,15 +10,33 @@ import { SendStatusModal } from './pages/SendStatusModal.tsx';
 import { SettingsModal } from './pages/SettingsModal.tsx';
 import { ConfigStatus, Inquiry } from './types/index.ts';
 import { ApiClient } from './api/client.ts';
+import { WifiOff } from 'lucide-react';
 
 export default function App() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<'inquiries' | 'new' | 'ledger' | 'agents'>('inquiries');
   const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   // Status modal state after dispatching or inspecting
   const [activeDispatchInquiry, setActiveDispatchInquiry] = useState<Inquiry | null>(null);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      ApiClient.syncAllLocalDataToServer().catch(() => {});
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -46,7 +64,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col overscroll-none">
+      {/* Offline Banner for Mobile Reliability */}
+      {!isOnline && (
+        <div className="bg-amber-600 text-white text-xs px-4 py-1.5 flex items-center justify-center gap-2 shadow-xs shrink-0 pt-safe">
+          <WifiOff className="w-3.5 h-3.5" />
+          <span>Working Offline · Changes saved to local storage</span>
+        </div>
+      )}
+
       {/* Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -56,7 +82,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className="flex-1 pb-nav smooth-scroll">
         {activeTab === 'inquiries' && (
           <InquiryListPage
             onNewInquiry={() => setActiveTab('new')}
