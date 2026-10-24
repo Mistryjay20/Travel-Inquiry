@@ -46,9 +46,10 @@ export interface Inquiry {
   pickup: string;
   drop: string;
   dateMode: 'fixed' | 'anytime';
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   returnDate?: string;
+  dateMessage?: string;
   adults: number;
   children: number;
   travelClass?: 'Economy' | 'Premium Economy' | 'Business';
@@ -107,9 +108,10 @@ export interface AgentEmailPayload {
   pickup: string;
   drop: string;
   dateMode: 'fixed' | 'anytime';
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   returnDate?: string;
+  dateMessage?: string;
   stops?: Array<{ place: string; nights: number }>;
   adults: number;
   children: number;

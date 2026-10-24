@@ -48,10 +48,24 @@ export function buildAgentEmail(payload: AgentEmailPayload): { subject: string; 
 
   // Date formatting
   let dateDisplay = '';
-  if (payload.dateMode === 'fixed') {
-    dateDisplay = `${escapeHtml(payload.startDate)} to ${escapeHtml(payload.endDate)}`;
+  if (payload.dateMode === 'anytime') {
+    if (payload.dateMessage && payload.dateMessage.trim()) {
+      dateDisplay = `Anytime (Flexible): ${escapeHtml(payload.dateMessage.trim())}`;
+    } else if (payload.startDate && payload.endDate) {
+      dateDisplay = `Anytime between ${escapeHtml(payload.startDate)} and ${escapeHtml(payload.endDate)}`;
+    } else {
+      dateDisplay = 'Anytime (Flexible)';
+    }
   } else {
-    dateDisplay = `Anytime between ${escapeHtml(payload.startDate)} and ${escapeHtml(payload.endDate)}`;
+    if (payload.startDate && payload.endDate) {
+      dateDisplay = `${escapeHtml(payload.startDate)} to ${escapeHtml(payload.endDate)}`;
+    } else if (payload.startDate) {
+      dateDisplay = `From ${escapeHtml(payload.startDate)}`;
+    } else if (payload.endDate) {
+      dateDisplay = `Until ${escapeHtml(payload.endDate)}`;
+    } else {
+      dateDisplay = 'Dates to be decided / Flexible';
+    }
   }
 
   // Stops formatting for Tour Packages
@@ -62,9 +76,9 @@ export function buildAgentEmail(payload: AgentEmailPayload): { subject: string; 
         (s, idx) =>
           `<tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; color: #475569;">Stop ${idx + 1}: <strong>${escapeHtml(
             s.place
-          )}</strong></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; color: #1e293b;">${escapeHtml(
-            s.nights
-          )} night${s.nights > 1 ? 's' : ''}</td></tr>`
+          )}</strong></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; color: #1e293b;">${
+            s.nights && s.nights > 0 ? `${escapeHtml(s.nights)} night${s.nights > 1 ? 's' : ''}` : 'Nights TBD'
+          }</td></tr>`
       )
       .join('');
     stopsHtml = `
@@ -153,11 +167,11 @@ export function buildAgentEmail(payload: AgentEmailPayload): { subject: string; 
           </tr>
           <tr style="border-bottom: 1px solid #e2e8f0;">
             <td style="padding: 8px 12px; font-weight: 600; color: #475569;">Pickup Point:</td>
-            <td style="padding: 8px 12px; color: #0f172a;">${escapeHtml(payload.pickup)}</td>
+            <td style="padding: 8px 12px; color: #0f172a;">${escapeHtml(payload.pickup) || 'Flexible / TBD'}</td>
           </tr>
           <tr style="border-bottom: 1px solid #e2e8f0;">
             <td style="padding: 8px 12px; font-weight: 600; color: #475569;">Drop Point:</td>
-            <td style="padding: 8px 12px; color: #0f172a;">${escapeHtml(payload.drop)}</td>
+            <td style="padding: 8px 12px; color: #0f172a;">${escapeHtml(payload.drop) || 'Flexible / TBD'}</td>
           </tr>
           <tr style="border-bottom: 1px solid #e2e8f0;">
             <td style="padding: 8px 12px; font-weight: 600; color: #475569;">Travel Dates:</td>

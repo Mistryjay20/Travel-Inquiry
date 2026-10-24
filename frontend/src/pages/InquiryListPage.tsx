@@ -444,16 +444,24 @@ export const InquiryListPage: React.FC<InquiryListPageProps> = ({
 
                 {/* Route & Dates unboxed typography */}
                 <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 border-t border-slate-100">
-                  <span className="font-medium text-slate-900">
-                    {inq.pickup} &rarr; {inq.drop}
-                  </span>
-                  <span aria-hidden="true" className="text-slate-300">
-                    ·
-                  </span>
+                  {(inq.pickup || inq.drop) && (
+                    <>
+                      <span className="font-medium text-slate-900">
+                        {inq.pickup && inq.drop
+                          ? `${inq.pickup} → ${inq.drop}`
+                          : inq.pickup
+                          ? `Pickup: ${inq.pickup}`
+                          : `Drop: ${inq.drop}`}
+                      </span>
+                      <span aria-hidden="true" className="text-slate-300">
+                        ·
+                      </span>
+                    </>
+                  )}
                   <span>
-                    {inq.dateMode === 'fixed'
-                      ? `${inq.startDate} to ${inq.endDate}`
-                      : `Anytime: ${inq.startDate} to ${inq.endDate}`}
+                    {inq.dateMode === 'anytime'
+                      ? (inq.dateMessage ? `Anytime: ${inq.dateMessage}` : (inq.startDate && inq.endDate ? `Anytime: ${inq.startDate} to ${inq.endDate}` : 'Anytime (Flexible)'))
+                      : (inq.startDate && inq.endDate ? `${inq.startDate} to ${inq.endDate}` : (inq.startDate ? `From ${inq.startDate}` : (inq.endDate ? `Until ${inq.endDate}` : 'Flexible Dates')))}
                   </span>
                   {inq.returnDate && (
                     <>
@@ -487,7 +495,7 @@ export const InquiryListPage: React.FC<InquiryListPageProps> = ({
                     {inq.stops.map((s, idx) => (
                       <span key={s.id || idx}>
                         {idx > 0 ? ' &rarr; ' : ''}
-                        {s.place} ({s.nights}N)
+                        {s.place} {s.nights && s.nights > 0 ? `(${s.nights}N)` : ''}
                       </span>
                     ))}
                   </div>

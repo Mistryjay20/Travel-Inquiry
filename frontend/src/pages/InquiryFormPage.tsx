@@ -35,9 +35,9 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
   const [pickup, setPickup] = useState('');
   const [drop, setDrop] = useState('');
 
-  // Package Stops
-  const [stops, setStops] = useState<Array<{ place: string; nights: number }>>([
-    { place: '', nights: 1 },
+  // Package Stops (nights initially blank so user can enter)
+  const [stops, setStops] = useState<Array<{ place: string; nights: number | string }>>([
+    { place: '', nights: '' },
   ]);
 
   // Dates
@@ -45,6 +45,7 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+  const [dateMessage, setDateMessage] = useState('');
 
   // Passengers & Specs
   const [adults, setAdults] = useState<number>(2);
@@ -70,8 +71,8 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
         const { agents } = await ApiClient.getAgents();
         const active = agents.filter((a) => a.active);
         setAgents(active);
-        // Default: select all active agents
-        setSelectedAgentIds(active.map((a) => a.id));
+        // Dispatch to agent checkbox should be unchecked by default (done manually by user)
+        setSelectedAgentIds([]);
       } catch (err: any) {
         console.error('Error loading agents:', err);
       } finally {
@@ -83,7 +84,7 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
 
   // Stops management
   const handleAddStop = () => {
-    setStops([...stops, { place: '', nights: 1 }]);
+    setStops([...stops, { place: '', nights: '' }]);
   };
 
   const handleRemoveStop = (index: number) => {
@@ -95,7 +96,8 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
     if (field === 'place') {
       updated[index].place = String(value);
     } else {
-      updated[index].nights = Math.max(1, Number(value) || 1);
+      const val = String(value).trim();
+      updated[index].nights = val === '' ? '' : Math.max(0, parseInt(val, 10) || 0);
     }
     setStops(updated);
   };
@@ -141,22 +143,6 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
       setErrorMessage('Destination is required.');
       return;
     }
-    if (!pickup.trim()) {
-      setErrorMessage('Pickup location is required.');
-      return;
-    }
-    if (!drop.trim()) {
-      setErrorMessage('Drop location is required.');
-      return;
-    }
-    if (!startDate || !endDate) {
-      setErrorMessage('Please select start and end dates.');
-      return;
-    }
-    if (inquiryType === 'ticket' && tripType === 'return' && !returnDate) {
-      setErrorMessage('Please select a return flight date.');
-      return;
-    }
     if (selectedAgentIds.length === 0) {
       setErrorMessage('Please select at least one agent to dispatch.');
       return;
@@ -164,7 +150,12 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
 
     // Clean stops if package
     const cleanedStops = inquiryType === 'package'
-      ? stops.filter((s) => s.place.trim() !== '')
+      ? stops
+          .filter((s) => s.place.trim() !== '')
+          .map((s) => ({
+            place: s.place.trim(),
+            nights: s.nights === '' ? 0 : Number(s.nights),
+          }))
       : [];
 
     setSubmitting(true);
@@ -179,9 +170,10 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
         pickup: pickup.trim(),
         drop: drop.trim(),
         dateMode,
-        startDate,
-        endDate,
-        returnDate: inquiryType === 'ticket' && tripType === 'return' ? returnDate : undefined,
+        startDate: dateMode === 'fixed' ? startDate : undefined,
+        endDate: dateMode === 'fixed' ? endDate : undefined,
+        returnDate: inquiryType === 'ticket' && tripType === 'return' && dateMode === 'fixed' ? returnDate : undefined,
+        dateMessage: dateMode === 'anytime' ? dateMessage.trim() : undefined,
         adults: Number(adults),
         children: Number(children || 0),
         travelClass: inquiryType === 'ticket' ? travelClass : undefined,
@@ -340,11 +332,10 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                Pickup Point <span className="text-rose-500">*</span>
+                Pickup Point
               </label>
               <input
                 type="text"
-                required
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
                 placeholder="e.g. Mumbai Airport / Ahmedabad"
@@ -354,11 +345,10 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                Drop Point <span className="text-rose-500">*</span>
+                Drop Point
               </label>
               <input
                 type="text"
-                required
                 value={drop}
                 onChange={(e) => setDrop(e.target.value)}
                 placeholder="e.g. Hotel Resort / Airport"
@@ -404,7 +394,8 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
                   <div className="flex items-center gap-1 shrink-0">
                     <input
                       type="number"
-                      min="1"
+                      min="0"
+                      placeholder=""
                       value={stop.nights}
                       onChange={(e) => handleStopChange(idx, 'nights', e.target.value)}
                       className="w-16 px-2 py-2 text-xs text-center bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
@@ -459,46 +450,60 @@ export const InquiryFormPage: React.FC<InquiryFormPageProps> = ({
             </label>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {dateMode === 'fixed' ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Ticket Round-Trip Return Date (Fixed Mode Only) */}
+              {inquiryType === 'ticket' && tripType === 'return' && (
+                <div className="pt-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Return Flight Date
+                  </label>
+                  <input
+                    type="date"
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                {dateMode === 'fixed' ? 'Start Date' : 'Earliest Start'} <span className="text-rose-500">*</span>
+                Flexible Travel Dates / Message
               </label>
-              <input
-                type="date"
-                required
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                {dateMode === 'fixed' ? 'End Date' : 'Latest End'} <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                required
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-              />
-            </div>
-          </div>
-
-          {/* Ticket Round-Trip Return Date */}
-          {inquiryType === 'ticket' && tripType === 'return' && (
-            <div className="pt-2">
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Return Flight Date <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                required
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+              <textarea
+                rows={3}
+                value={dateMessage}
+                onChange={(e) => setDateMessage(e.target.value)}
+                placeholder="e.g. Flexible in November or December, looking for a 4-5 days trip anytime after Diwali"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 placeholder:text-slate-400"
               />
             </div>
           )}

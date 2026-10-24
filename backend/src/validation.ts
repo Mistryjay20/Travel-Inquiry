@@ -20,7 +20,7 @@ export const agentUpdateSchema = agentSchema.partial();
 
 export const inquiryStopSchema = z.object({
   place: z.string().trim().min(1, 'Place name is required'),
-  nights: z.coerce.number().int().min(1, 'Nights must be at least 1'),
+  nights: z.coerce.number().int().min(0).optional().default(0),
 });
 
 export const inquiryCreateSchema = z.object({
@@ -29,12 +29,13 @@ export const inquiryCreateSchema = z.object({
   clientName: z.string().trim().min(2, 'Client name must be at least 2 characters'),
   clientPhone: z.string().trim().regex(phoneRegex, 'Client phone must be at least 7 digits'),
   destination: z.string().trim().min(2, 'Destination must be at least 2 characters'),
-  pickup: z.string().trim().min(2, 'Pickup point is required'),
-  drop: z.string().trim().min(2, 'Drop point is required'),
+  pickup: z.string().optional().default(''),
+  drop: z.string().optional().default(''),
   dateMode: z.enum(['fixed', 'anytime']),
-  startDate: z.string().regex(dateRegex, 'Start date must be in YYYY-MM-DD format'),
-  endDate: z.string().regex(dateRegex, 'End date must be in YYYY-MM-DD format'),
-  returnDate: z.string().regex(dateRegex, 'Return date must be in YYYY-MM-DD format').optional().or(z.literal('')),
+  startDate: z.string().optional().or(z.literal('')),
+  endDate: z.string().optional().or(z.literal('')),
+  returnDate: z.string().optional().or(z.literal('')),
+  dateMessage: z.string().optional().or(z.literal('')),
   adults: z.coerce.number().int().min(1, 'At least 1 adult passenger required'),
   children: z.coerce.number().int().min(0).default(0),
   travelClass: z.enum(['Economy', 'Premium Economy', 'Business']).optional().or(z.literal('')),

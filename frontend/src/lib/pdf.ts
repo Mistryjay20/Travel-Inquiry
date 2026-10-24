@@ -35,20 +35,22 @@ export function exportInquiriesPDF(inquiries: Inquiry[]) {
 
   const tableBody = inquiries.map((inq) => {
     const typeLabel = inq.type === 'package' ? 'Package' : `Ticket (${inq.tripType || 'single'})`;
-    const dates = inq.dateMode === 'fixed' 
-      ? `${inq.startDate} to ${inq.endDate}` 
-      : `Anytime: ${inq.startDate} to ${inq.endDate}`;
+    const dates = inq.dateMode === 'anytime'
+      ? (inq.dateMessage ? `Anytime: ${inq.dateMessage}` : (inq.startDate && inq.endDate ? `Anytime: ${inq.startDate} to ${inq.endDate}` : 'Anytime (Flexible)'))
+      : (inq.startDate && inq.endDate ? `${inq.startDate} to ${inq.endDate}` : (inq.startDate ? `From ${inq.startDate}` : (inq.endDate ? `Until ${inq.endDate}` : 'Flexible')));
     const passengers = `${inq.adults}A, ${inq.children}C`;
     const statusLabel = inq.status === 'inquiry' ? 'Inquiry' : inq.status === 'confirmed' ? 'Confirmed' : 'Cancelled';
     const agentsCount = inq.dispatches?.length || 0;
     const sentList = (inq.dispatches || []).map((d) => d.agentName).join(', ') || 'None';
+
+    const routeStr = inq.pickup && inq.drop ? `${inq.pickup} -> ${inq.drop}` : (inq.pickup || inq.drop || '-');
 
     return [
       `#${inq.inquiryNumber}`,
       inq.clientName,
       typeLabel,
       inq.destination,
-      `${inq.pickup} -> ${inq.drop}`,
+      routeStr,
       dates,
       passengers,
       statusLabel,
